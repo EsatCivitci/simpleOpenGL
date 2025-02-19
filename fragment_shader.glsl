@@ -2,7 +2,7 @@
 
 // Interpolated values from the vertex Shader
 in vec3 FragPos;      // Fragment position in world space
-in vec3 Normal;       // Normal vector from vertex shader    
+flat in vec3 Normal;       // Normal vector from vertex shader    
 //in vec3 vertexColor;  // Interpolated vertex color
 
 // Final color output 

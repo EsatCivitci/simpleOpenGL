@@ -133,49 +133,49 @@ void initShaders()
 // Create Vertex Buffer Object
 void createVBO()
 {
-    /*
+    
     // For Smooth Shading
     GLfloat positions[] = {
     // Positions       
-        -0.5f, -0.5f, 0.5f, 1.0f,  // Bottom-left-front 
-        0.5f, -0.5f, 0.5f, 1.0f,   // Bottom-right-front 
-        0.5f,  0.5f, 0.5f, 1.0f,   // Top-right-front 
-        -0.5f,  0.5f, 0.5f, 1.0f,  // Top-left-front 
-        -0.5f, -0.5f, -0.5f, 1.0f, // Bottom-left-back 
-        0.5f, -0.5f, -0.5f, 1.0f,  // Bottom-right-back 
-        0.5f,  0.5f, -0.5f, 1.0f,  // Top-right-back 
-        -0.5f,  0.5f, -0.5f, 1.0f  // Top-left-back 
+        -0.5f, -0.5f, 0.5f, //1.0f,  // Bottom-left-front 
+        0.5f, -0.5f, 0.5f, //1.0f,   // Bottom-right-front 
+        0.5f,  0.5f, 0.5f, //1.0f,   // Top-right-front 
+        -0.5f,  0.5f, 0.5f, //1.0f,  // Top-left-front 
+        -0.5f, -0.5f, -0.5f, //1.0f, // Bottom-left-back 
+        0.5f, -0.5f, -0.5f, //1.0f,  // Bottom-right-back 
+        0.5f,  0.5f, -0.5f, //1.0f,  // Top-right-back 
+        -0.5f,  0.5f, -0.5f, //1.0f  // Top-left-back 
     };
 
     GLfloat normals[] = {
         // Averaged normals for each unique vertex
-        -1.0f, -1.0f,  1.0f,  // Vertex 0 (used by front, left, bottom)
-        1.0f, -1.0f,  1.0f,  // Vertex 1 (used by front, right, bottom)
-        1.0f,  1.0f,  1.0f,  // Vertex 2 (used by front, right, top)
-        -1.0f,  1.0f,  1.0f,  // Vertex 3 (used by front, left, top)
-        -1.0f, -1.0f, -1.0f,  // Vertex 4 (used by back, left, bottom)
-        1.0f, -1.0f, -1.0f,  // Vertex 5 (used by back, right, bottom)
-        1.0f,  1.0f, -1.0f,  // Vertex 6 (used by back, right, top)
-        -1.0f,  1.0f, -1.0f   // Vertex 7 (used by back, left, top)
+        0.0f, -1.0f, 0.0f,   // Bottom
+        1.0f, 0.0f, 0.0f,    // Right
+        0.0f, 0.0f, 1.0f,    // Front
+        -1.0f, 0.0f, 0.0f,   // Left
+        -1.0f, -1.0f, -1.0f, // Unused
+        1.0f, -1.0f, -1.0f,  // Unused
+        0.0f, 0.0f, -1.0f,   // Back
+        0.0f, 1.0f, 0.0f     // Top
     };
 
     // Define indices for two triangles
     GLuint indices[] = {
         0, 1, 2,  // Front Face 1
-        2, 3, 0,  // Front Face 2
+        3, 0, 2,  // Front Face 2
         4, 7, 6,  // Back Face 1
-        6, 5, 4,  // Back Face 2
-        1, 5, 6,  // Right Face 1
+        5, 4, 6,  // Back Face 2
+        5, 6, 1,  // Right Face 1
         6, 2, 1,  // Right Face 2
         4, 0, 3,  // Left Face 1
-        3, 7, 4,  // Left Face 2
-        3, 2, 6,  // Top Face 1
-        6, 7, 3,  // Top Face 2
+        7, 4, 3,  // Left Face 2
+        3, 2, 7,  // Top Face 1
+        2, 6, 7,  // Top Face 2
         5, 1, 0,  // Bottom Face 1
-        0, 4, 5   // Bottom Face 2
-    }; */
+        4, 1, 0   // Bottom Face 2
+    }; 
 
-
+/*
     // For Flat Shading
     GLfloat positions[] = {
         // Front face (z = 0.5)
@@ -261,7 +261,7 @@ void createVBO()
         18, 17, 16, 16, 19, 18, // Top face
         20, 21, 22, 22, 23, 20  // Bottom face
     };
-
+*/
 
     // Create a VAO (Vertex Array Object)
     glGenVertexArrays(1, &VAO);
@@ -281,7 +281,7 @@ void createVBO()
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     // Position attribute (location 0 / Position)
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4*sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)(sizeof(positions)));
