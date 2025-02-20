@@ -2,7 +2,8 @@
 
 // Interpolated values from the vertex Shader
 in vec3 FragPos;      // Fragment position in world space
-flat in vec3 Normal;       // Normal vector from vertex shader    
+flat in vec3 Normal;       // Normal vector from vertex shader  
+in vec2 TexCoord;  
 //in vec3 vertexColor;  // Interpolated vertex color
 
 // Final color output 
@@ -11,7 +12,8 @@ out vec4 FragColor;
 // Point light properties
 uniform vec3 lightPos;    // Light position in world space
 uniform vec3 lightColor;  // Light Color
-uniform vec3 viewPos;     // Camera position (for specular lighting)     
+uniform vec3 viewPos;     // Camera position (for specular lighting)    
+uniform sampler2D texture1; 
 
 // Material properties
 uniform float ambientStrength;
@@ -36,8 +38,18 @@ void main()
     float spec = pow(max(dot(norm, halfwayDir), 0.0), shininess);
     vec3 specular = specularStrength * spec * lightColor;
 
+    vec3 textureColor = texture(texture1, TexCoord).rgb;
+    
+    vec3 resultColor;
     // Combine lighting components
-    vec3 resultColor = clamp(ambient + diffuse + specular, 0.0, 1.0);
+    if (textureColor.x == 0)
+    {   
+        resultColor = clamp(ambient + diffuse + specular, 0.0, 1.0);
+    }
+    else
+    {
+        resultColor = textureColor * clamp(ambient + diffuse + specular, 0.0, 1.0);
+    }
 
     FragColor = vec4(resultColor, 1.0);
 }

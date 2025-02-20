@@ -13,6 +13,9 @@
 #include <iostream>
 #include <sstream>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 #include <string>
 #include <vector>
 
@@ -26,10 +29,12 @@ GLuint shaderProgram;
 
 GLuint VAO, VBO, EBO;
 
+GLuint groundTexture;
+
 GLuint lightVAO; // Light Object VAO
 glm::vec3 lightPos(1.2f, 1.0f, 2.0f); // Light source position
 
-glm::vec3 camPos = {0, 0, 3}; // Camera Position
+glm::vec3 camPos = {0, 1, 3}; // Camera Position
 glm::vec3 camFront = {0.0f, 0.0f, -1.0f}; // Gaze 
 glm::vec3 camUp = {0.0f, 1.0f, 0.0f}; // Up  
 
@@ -135,16 +140,16 @@ void createVBO()
 {
     
     // For Smooth Shading
-    GLfloat positions[] = {
+    GLfloat cubePositions[] = {
     // Positions       
-        -0.5f, -0.5f, 0.5f, //1.0f,  // Bottom-left-front 
-        0.5f, -0.5f, 0.5f, //1.0f,   // Bottom-right-front 
-        0.5f,  0.5f, 0.5f, //1.0f,   // Top-right-front 
-        -0.5f,  0.5f, 0.5f, //1.0f,  // Top-left-front 
-        -0.5f, -0.5f, -0.5f, //1.0f, // Bottom-left-back 
-        0.5f, -0.5f, -0.5f, //1.0f,  // Bottom-right-back 
-        0.5f,  0.5f, -0.5f, //1.0f,  // Top-right-back 
-        -0.5f,  0.5f, -0.5f, //1.0f  // Top-left-back 
+        -0.5f, 0.0f, 0.5f,      0.0f,  0.0f,  // Bottom-left-front 
+        0.5f, 0.0f, 0.5f,       1.0f,  0.0f,  // Bottom-right-front 
+        0.5f,  1.0f, 0.5f,      5.0f,  5.0f,  // Top-right-front 
+        -0.5f,  1.0f, 0.5f,     -5.0f,  5.0f,  // Top-left-front 
+        -0.5f, 0.0f, -0.5f,     0.0f,  0.0f,  // Bottom-left-back 
+        0.5f, 0.0f, -0.5f,      1.0f,  0.0f,  // Bottom-right-back 
+        0.5f,  1.0f, -0.5f,     5.0f,  -5.0f,  // Top-right-back 
+        -0.5f,  1.0f, -0.5f,    -5.0f,  -5.0f,  // Top-left-back 
     };
 
     GLfloat normals[] = {
@@ -172,11 +177,12 @@ void createVBO()
         3, 2, 7,  // Top Face 1
         2, 6, 7,  // Top Face 2
         5, 1, 0,  // Bottom Face 1
-        4, 1, 0   // Bottom Face 2
+        4, 5, 0   // Bottom Face 2
     }; 
 
+
 /*
-    // For Flat Shading
+    // Flat shading without Provoking Vertex Convention 
     GLfloat positions[] = {
         // Front face (z = 0.5)
         -0.5f, -0.5f,  0.5f, 1.0f,  
@@ -263,6 +269,7 @@ void createVBO()
     };
 */
 
+
     // Create a VAO (Vertex Array Object)
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
@@ -270,10 +277,10 @@ void createVBO()
     // Create a VBO (Vertex Buffer Object)
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(positions) + sizeof(normals), NULL, GL_STATIC_DRAW);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(positions), positions);
-    glBufferSubData(GL_ARRAY_BUFFER, sizeof(positions), sizeof(normals), normals);
-    //glBufferSubData(GL_ARRAY_BUFFER, sizeof(positions), sizeof(colors), colors);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cubePositions) + sizeof(normals), NULL, GL_STATIC_DRAW);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(cubePositions), cubePositions);
+    glBufferSubData(GL_ARRAY_BUFFER, sizeof(cubePositions), sizeof(normals), normals);
+    //glBufferSubData(GL_ARRAY_BUFFER, sizeof(cubePositions), sizeof(colors), colors);
 
     // Create a EBO (Element Buffer Object)
     glGenBuffers(1, &EBO);
@@ -281,11 +288,15 @@ void createVBO()
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     // Position attribute (location 0 / Position)
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5*sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)(sizeof(positions)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)(sizeof(cubePositions)));
     glEnableVertexAttribArray(1);
+
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 5*sizeof(float), (void*)(3*sizeof(float)));
+    glEnableVertexAttribArray(2);
+
 
     // Position attribute (location 1 / Color)
     // glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)(sizeof(positions)));
@@ -310,14 +321,45 @@ void renderGround()
     glUseProgram(shaderProgram);
     glBindVertexArray(VAO);
 
+    // Bind the texture
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, groundTexture);
+    glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0);
+
     glm::mat4 groundModel = glm::mat4(1.0f);
-    groundModel = glm::translate(groundModel, glm::vec3(0.0f, -0.6f, 0.0f));
+    groundModel = glm::translate(groundModel, glm::vec3(0.0f, -0.2f, 0.0f));
     groundModel = glm::scale(groundModel, glm::vec3(10.0f, 0.2f, 10.0f));
 
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(groundModel));
 
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
+    // Unbind the texture
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+}
+
+GLuint loadTexture(const char* filename)
+{
+    GLuint textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+
+    // Load image
+    int widht, height, nrChannels;
+    unsigned char* img = stbi_load(filename, &widht, &height, &nrChannels, 0);
+
+    if (img){
+        GLenum format = (nrChannels == 3) ? GL_RGB : GL_RGBA;
+        glTexImage2D(GL_TEXTURE_2D, 0, format, widht, height, 0, format, GL_UNSIGNED_BYTE, img);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else{
+        cerr << "Failed to load texture: " << filename << endl;
+    }
+    stbi_image_free(img);
+
+    return textureID;
 }
 
 // Keyboard inputs
@@ -433,6 +475,8 @@ void init()
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
+
+    groundTexture = loadTexture("brick_wall.jpg");
 
     createVBO();
 
